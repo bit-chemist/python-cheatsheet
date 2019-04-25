@@ -79,7 +79,7 @@ value  = <dict>.setdefault(key, default=None)   # Same, but also adds default to
 ```
 
 ```python
-<dict>.update(<dict>)                           # Or: dict_a = {**dict_a, **dict_b}.
+<dict>.update(<dict>)
 <dict> = dict(<collection>)                     # Creates a dict from coll. of key-value pairs.
 <dict> = dict(zip(keys, values))                # Creates a dict from two collections.
 <dict> = dict.fromkeys(keys [, value])          # Creates a dict from collection of keys.
@@ -195,7 +195,7 @@ from itertools import count, repeat, cycle, chain, islice
 ```
 
 ```python
-<iter> = chain(<coll.>, <coll.>, ...)       # Empties collections in order.
+<iter> = chain(<coll.>, <coll.> [, ...])    # Empties collections in order.
 <iter> = chain.from_iterable(<collection>)  # Empties collections inside a collection in order.
 ```
 
@@ -226,17 +226,38 @@ def count(start, step):
 
 Type
 ----
+* **Everything is an object.**
+* **Every object has a type.**
+* **Type and class are synonymous.**
+
 ```python
-<type> = type(<el>)  # <class 'int'> / <class 'str'> / ...
+<type> = type(<el>)                # Or: <el>.__class__
+<bool> = isinstance(<el>, <type>)  # Or: issubclass(type(<el>), <type>)
 ```
+
+```python
+>>> type('a'), 'a'.__class__, str
+(<class 'str'>, <class 'str'>, <class 'str'>)
+```
+
+#### Some types do not have builtin names, so they must be imported:
+```python
+from types import FunctionType, MethodType, LambdaType, GeneratorType
+```
+
+### ABC
+**An abstract base class introduces virtual subclasses, that don’t inherit from it but are still recognized by isinstance() and issubclass().**
 
 ```python
 from numbers import Integral, Rational, Real, Complex, Number
-<bool> = isinstance(<el>, Number)
+from collections.abc import Sequence, Collection, Iterable
 ```
 
 ```python
-<bool> = callable(<el>)
+>>> isinstance(123, Number)
+True
+>>> isinstance([1, 2, 3], Iterable)
+True
 ```
 
 
@@ -323,6 +344,7 @@ Format
 <str> = '{}, {}'.format(<el_1>, <el_2>)
 ```
 
+### Attributes
 ```python
 >>> from collections import namedtuple
 >>> Person = namedtuple('Person', 'name height')
@@ -336,9 +358,12 @@ Format
 ### General Options
 ```python
 {<el>:<10}       # '<el>      '
-{<el>:>10}       # '      <el>'
 {<el>:^10}       # '   <el>   '
-{<el>:.>10}      # '......<el>'
+{<el>:>10}       # '      <el>'
+```
+
+```python
+{<el>:.<10}      # '<el>......'
 {<el>:>0}        # '<el>'
 ```
 
@@ -387,10 +412,9 @@ Numbers
 
 ### Math
 ```python
-from math import e, pi
+from math import e, pi, inf, nan
 from math import cos, acos, sin, asin, tan, atan, degrees, radians
 from math import log, log10, log2
-from math import inf, nan, isinf, isnan
 ```
 
 ### Statistics
@@ -532,9 +556,9 @@ Arguments
 
 ### Inside Function Definition
 ```python
-def f(<nondefault_args>):                      # def f(x, y)
-def f(<default_args>):                         # def f(x=0, y=0)
-def f(<nondefault_args>, <default_args>):      # def f(x, y=0)
+def f(<nondefault_args>):                      # def f(x, y):
+def f(<default_args>):                         # def f(x=0, y=0):
+def f(<nondefault_args>, <default_args>):      # def f(x, y=0):
 ```
 
 
@@ -567,6 +591,13 @@ def add(*a):
 
 #### Legal argument combinations:
 ```python
+def f(x, y, z):                # f(x=1, y=2, z=3) | f(1, y=2, z=3) | f(1, 2, z=3) | f(1, 2, 3)
+def f(*, x, y, z):             # f(x=1, y=2, z=3)
+def f(x, *, y, z):             # f(x=1, y=2, z=3) | f(1, y=2, z=3)
+def f(x, y, *, z):             # f(x=1, y=2, z=3) | f(1, y=2, z=3) | f(1, 2, z=3)
+```
+
+```python
 def f(*args):                  # f(1, 2, 3)
 def f(x, *args):               # f(1, 2, 3)
 def f(*args, z):               # f(1, 2, z=3)
@@ -576,6 +607,7 @@ def f(x, *args, z):            # f(1, 2, z=3)
 ```python
 def f(**kwargs):               # f(x=1, y=2, z=3)
 def f(x, **kwargs):            # f(x=1, y=2, z=3) | f(1, y=2, z=3)
+def f(*, x, **kwargs):         # f(x=1, y=2, z=3)
 ```
 
 ```python
@@ -650,7 +682,7 @@ from functools import reduce
 ['zero', 1, 'zero', 3]
 ```
 
-### Namedtuple, Enum, Class
+### Namedtuple, Enum, Dataclass
 ```python
 from collections import namedtuple
 Point     = namedtuple('Point', 'x y')
@@ -660,13 +692,13 @@ point     = Point(0, 0)
 ```python
 from enum import Enum
 Direction = Enum('Direction', 'n e s w')
-Cutlery   = Enum('Cutlery', {'fork': 1, 'knife': 2, 'spoon': 3})
+direction = Direction.n
 ```
 
 ```python
-# Warning: Objects will share the objects that are initialized in the dictionary!
-Creature  = type('Creature', (), {'p': Point(0, 0), 'd': Direction.n})
-creature  = Creature()
+from dataclasses import make_dataclass
+Creature  = make_dataclass('Creature', ['location', 'direction'])
+creature  = Creature(Point(0, 0), Direction.n)
 ```
 
 
@@ -805,6 +837,8 @@ class <name>:
     def get_class_name(cls):
         return cls.__name__
 ```
+* **Return value of repr() should be unambiguous and of str() readable.**
+* **If only repr() is defined, it will also be used for str().**
 
 ### Constructor Overloading
 ```python
@@ -839,6 +873,41 @@ class C(A, B): pass
 [<class 'C'>, <class 'A'>, <class 'B'>, <class 'object'>]
 ```
 
+### Property
+```python
+class MyClass:
+    @property
+    def a(self):
+        return self._a
+
+    @a.setter
+    def a(self, value):
+        self._a = value
+```
+
+```python
+>>> el = MyClass()
+>>> el.a = 123
+>>> el.a
+123
+```
+
+### Dataclass
+**Decorator that automatically generates init(), repr() and eq() special methods.**
+```python
+from dataclasses import dataclass, field
+
+@dataclass(order=False, frozen=False)
+class <class_name>:
+    <attr_name_1>: <type>
+    <attr_name_2>: <type> = <default_value>
+    <attr_name_3>: list/dict/set = field(default_factory=list/dict/set)
+```
+* **An object can be made sortable with `'order=True'` or immutable with `'frozen=True'`.**
+* **Function field() is needed because `'<attr_name>: list = []'` would make a list that is shared among all instances.**
+* **Default_factory can be any callable.**
+
+
 ### Copy
 ```python
 from copy import copy, deepcopy
@@ -854,6 +923,7 @@ Duck Types
 ### Comparable
 * **If eq() method is not overridden, it returns `'id(self) == id(other)'`, which is the same as `'self is other'`.**
 * **That means all objects compare not equal by default.**
+* **Only left side object has eq() method called, unless it returns 'NotImplemented', in which case the right object is consulted.**
 
 ```python
 class MyComparable:
@@ -862,7 +932,7 @@ class MyComparable:
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return self.a == other.a
-        return False
+        return NotImplemented
 ```
 
 ### Hashable
@@ -873,16 +943,35 @@ class MyComparable:
 ```python
 class MyHashable:
     def __init__(self, a):
-        self.__a = copy.deepcopy(a)
+        self._a = copy.deepcopy(a)
     @property
     def a(self):
-        return self.__a
+        return self._a
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return self.a == other.a
-        return False
+        return NotImplemented
     def __hash__(self):
         return hash(self.a)
+```
+
+### Sortable
+* **With 'total_ordering' decorator you only need to provide one of lt(), gt(), le() or ge() special methods.**
+```python
+from functools import total_ordering
+
+@total_ordering
+class MySortable:
+    def __init__(self, a):
+        self.a = a
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return self.a == other.a
+        return NotImplemented
+    def __lt__(self, other):
+        if isinstance(other, type(self)):
+            return self.a < other.a
+        return NotImplemented
 ```
 
 ### Collection
@@ -896,10 +985,10 @@ class MyCollection:
         return len(self.a)
     def __getitem__(self, i):
         return self.a[i]
-    def __setitem__(self, i, value):
-        self.a[i] = value
-    def __contains__(self, value):
-        return value in self.a
+    def __setitem__(self, i, el):
+        self.a[i] = el
+    def __contains__(self, el):
+        return el in self.a
     def __iter__(self):
         for el in self.a:
             yield el
@@ -1193,8 +1282,8 @@ import os
 
 ### Subprocess
 ```python
->>> import subprocess
->>> a = subprocess.run(['ls', '-a'], stdout=subprocess.PIPE)
+>>> import subprocess, shlex
+>>> a = subprocess.run(shlex.split('ls -a'), stdout=subprocess.PIPE)
 >>> a.stdout
 b'.\n..\nfile1.txt\nfile2.txt\n'
 >>> a.returncode
@@ -1436,6 +1525,12 @@ lock.acquire()
 lock.release()
 ```
 
+#### Or:
+```python
+with lock:
+    ...
+```
+
 
 Introspection
 -------------
@@ -1514,6 +1609,32 @@ class MyClass(metaclass=MyMetaClass):
 ('abcde', 12345)
 ```
 
+#### Type diagram (str is an instance of type, ...):
+```text
++---------+-------------+
+| Classes | Metaclasses |
++---------+-------------|
+| MyClass > MyMetaClass |
+|         |     v       |
+|  object ---> type <+  |
+|         |    ^ +---+  |
+|   str -------+        |
++---------+-------------+
+```
+
+#### Inheritance diagram (str is a subclass of object, ...):
+```text
++---------+-------------+
+| Classes | Metaclasses |
++---------+-------------|
+| MyClass | MyMetaClass |
+|    v    |     v       |
+|  object <--- type     |
+|    ^    |             |
+|   str   |             |
++---------+-------------+
+```
+
 
 Operator
 --------
@@ -1536,7 +1657,6 @@ last_el          = op.methodcaller('pop')(<list>)
 
 Eval
 ----
-### Basic
 ```python
 >>> from ast import literal_eval
 >>> literal_eval('1 + 2')
@@ -1545,51 +1665,6 @@ Eval
 [1, 2, 3]
 >>> literal_eval('abs(1)')
 ValueError: malformed node or string
-```
-
-### Using Abstract Syntax Trees
-```python
-import ast
-from ast import Num, BinOp, UnaryOp
-import operator as op
-
-LEGAL_OPERATORS = {ast.Add:    op.add,      # <el> + <el>
-                   ast.Sub:    op.sub,      # <el> - <el>
-                   ast.Mult:   op.mul,      # <el> * <el>
-                   ast.Div:    op.truediv,  # <el> / <el>
-                   ast.Pow:    op.pow,      # <el> ** <el>
-                   ast.BitXor: op.xor,      # <el> ^ <el>
-                   ast.USub:   op.neg}      # - <el>
-
-def evaluate(expression):
-    root = ast.parse(expression, mode='eval')
-    return eval_node(root.body)
-
-def eval_node(node):
-    node_type = type(node)
-    if node_type == Num:
-        return node.n
-    if node_type not in [BinOp, UnaryOp]:
-        raise TypeError(node)
-    operator_type = type(node.op)
-    if operator_type not in LEGAL_OPERATORS:
-        raise TypeError(f'Illegal operator {node.op}')
-    operator = LEGAL_OPERATORS[operator_type]
-    if node_type == BinOp:
-        left, right = eval_node(node.left), eval_node(node.right)
-        return operator(left, right)
-    elif node_type == UnaryOp:
-        operand = eval_node(node.operand)
-        return operator(operand)
-```
-
-```python
->>> evaluate('2 ^ 6')
-4
->>> evaluate('2 ** 6')
-64
->>> evaluate('1 + 2 * 3 ** (4 ^ 5) / (6 + -7)')
--5.0
 ```
 
 
@@ -1714,9 +1789,19 @@ from loguru import logger
 ```python
 logger.add('debug_{time}.log', colorize=True)  # Connects a log file.
 logger.add('error_{time}.log', level='ERROR')  # Another file for errors or higher.
-logger.<level>('A logging message')
+logger.<level>('A logging message.')
 ```
 * **Levels: `'debug'`, `'info'`, `'success'`, `'warning'`, `'error'`, `'critical'`.**
+
+### Exceptions
+**Error description, stack trace and values of variables are appended automatically.**
+
+```python
+try:
+    ...
+except <exception>:
+    logger.exception('An error happened.')
+```
 
 ### Rotation
 **Parameter that sets a condition when a new log file is created.**
@@ -1737,12 +1822,6 @@ retention=<int>|<datetime.timedelta>|<str>
 * **`'<timedelta>'` - Max age of a file.**
 * **`'<str>'` - Max age as a string: `'1 week, 3 days'`, `'2 months'`, ...**
 
-### Compression
-**Sets how inactive log files are compressed.**
-```python
-compression='gz'|'bz2'|'tar'|'tar.gz'|'tar.bz2'|'zip'
-```
-
 
 Scraping
 --------
@@ -1759,6 +1838,20 @@ Scraping
 >>> ver   = rows[6].find('div').text.split()[0]
 >>> link, ver
 ('https://www.python.org/', '3.7.2')
+```
+
+### Selenium
+**Library for scraping dynamically generated web content.**
+
+```python
+# $ brew cask install chromedriver
+# $ pip3 install selenium
+>>> from selenium import webdriver
+>>> driver = webdriver.Chrome()
+>>> driver.get(url)
+>>> xpath  = '//*[@id="mw-content-text"]/div/table[1]/tbody/tr[7]/td/div'
+>>> driver.find_element_by_xpath(xpath).text.split()[0]
+'3.7.2'
 ```
 
 
@@ -2056,7 +2149,7 @@ frames_i  = (add_noise(a) for a in read_wav_file('test.wav'))
 write_to_wav_file('test.wav', frames_i)
 ```
 
-#### Plays Popcorn:
+### Synthesizer
 ```python
 # $ pip3 install simpleaudio
 import simpleaudio, math, struct
@@ -2085,6 +2178,7 @@ Basic Script Template
 #
 
 from collections import namedtuple
+from dataclasses import make_dataclass
 from enum import Enum
 import re
 import sys

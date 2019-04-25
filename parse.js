@@ -30,8 +30,50 @@ const TOC =
   '}\n' +
   '</code></pre>\n';
 
-const MRO =
-  '<pre><code class="python language-python hljs"><span class="hljs-meta">&gt;&gt;&gt; </span>C.mro()\n[&lt;<span class="hljs-class"><span class="hljs-title">class</span> \'<span class="hljs-title">C</span>\'&gt;, &lt;<span class="hljs-title">class</span> \'<span class="hljs-title">A</span>\'&gt;, &lt;<span class="hljs-title">class</span> \'<span class="hljs-title">B</span>\'&gt;, &lt;<span class="hljs-title">class</span> \'<span class="hljs-title">object</span>\'&gt;]</span></code>\n</pre>\n'
+const DIAGRAM_1_A = 
+  '+---------+-------------+\n' +
+  '| Classes | Metaclasses |\n' +
+  '+---------+-------------|\n' +
+  '| MyClass > MyMetaClass |\n' +
+  '|         |     v       |\n' +
+  '|  object ---> type <+  |\n' +
+  '|         |    ^ +---+  |\n' +
+  '|   str -------+        |\n' +
+  '+---------+-------------+\n';
+
+const DIAGRAM_1_B =
+  '┏━━━━━━━━━┯━━━━━━━━━━━━━┓\n' +
+  '┃ Classes │ Metaclasses ┃\n' +
+  '┠─────────┼─────────────┨\n' +
+  '┃ MyClass → MyMetaClass ┃\n' +
+  '┃         │     ↓       ┃\n' +
+  '┃  object ───→ type ←╮  ┃\n' +
+  '┃         │    ↑ ╰───╯  ┃\n' +
+  '┃   str ───────╯        ┃\n' +
+  '┗━━━━━━━━━┷━━━━━━━━━━━━━┛\n';
+
+const DIAGRAM_2_A =
+  '+---------+-------------+\n' +
+  '| Classes | Metaclasses |\n' +
+  '+---------+-------------|\n' +
+  '| MyClass | MyMetaClass |\n' +
+  '|    v    |     v       |\n' +
+  '|  object <--- type     |\n' +
+  '|    ^    |             |\n' +
+  '|   str   |             |\n' +
+  '+---------+-------------+\n';
+
+const DIAGRAM_2_B =
+  '┏━━━━━━━━━┯━━━━━━━━━━━━━┓\n' +
+  '┃ Classes │ Metaclasses ┃\n' +
+  '┠─────────┼─────────────┨\n' +
+  '┃ MyClass │ MyMetaClass ┃\n' +
+  '┃    ↓    │     ↓       ┃\n' +
+  '┃  object ←─── type     ┃\n' +
+  '┃    ↑    │             ┃\n' +
+  '┃   str   │             ┃\n' +
+  '┗━━━━━━━━━┷━━━━━━━━━━━━━┛\n';
+
 
 function main() {
   const html = getMd();
@@ -52,9 +94,15 @@ function initDom(html) {
 }
 
 function getMd() {
-  const readme = readFile('README.md');
+  var readme = readFile('README.md');
+  readme = switchClassDiagrams(readme);
   const converter = new showdown.Converter();
   return converter.makeHtml(readme);
+}
+
+function switchClassDiagrams(readme) {
+  readme = readme.replace(DIAGRAM_1_A, DIAGRAM_1_B)
+  return readme.replace(DIAGRAM_2_A, DIAGRAM_2_B)
 }
 
 function modifyPage() {
@@ -94,23 +142,23 @@ function unindentBanner() {
 }
 
 function highlightCode() {
-  setApache('<D>')
-  setApache('<T>')
-  setApache('<DT>')
-  setApache('<TD>')
-  setApache('<a>')
-  setApache('<n>')
+  setApaches(['<D>', '<T>', '<DT>', '<TD>', '<a>', '<n>']);
   $('code').not('.python').not('.text').not('.bash').not('.apache').addClass('python');
   $('code').each(function(index) {
       hljs.highlightBlock(this);
   });
-  $('#copy').prev().remove()
-  const nodes = $.parseHTML(MRO);
-  $('#copy').before(nodes);
+  fixClasses()
 }
 
-function setApache(codeContents) {
-  $(`code:contains(${codeContents})`).addClass('apache');
+function setApaches(elements) {
+  for (el of elements) {
+    $(`code:contains(${el})`).addClass('apache');
+  }
+}
+
+function fixClasses() {
+  // Changes class="hljs-keyword" to class="hljs-title" of 'class' keyword.
+  $('.hljs-class').filter(':contains(class \')').find(':first-child').removeClass('hljs-keyword').addClass('hljs-title')
 }
 
 function readFile(filename) {
